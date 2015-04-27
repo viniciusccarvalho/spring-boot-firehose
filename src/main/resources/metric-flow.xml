@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:int="http://www.springframework.org/schema/integration"
+	   xmlns:task="http://www.springframework.org/schema/task"
+	   xmlns:int-websocket="http://www.springframework.org/schema/integration/websocket"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration-4.1.xsd http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd http://www.springframework.org/schema/integration/websocket http://www.springframework.org/schema/integration/websocket/spring-integration-websocket.xsd">
+
+	<task:executor id="executor" pool-size="10" queue-capacity="100"/>
+
+
+	<bean id="byteBufferConverter" class="org.springframework.xd.firehose.ByteBufferMessageConverter"/>
+	<bean id="envelopeTransformer" class="org.springframework.xd.firehose.EnvelopeTransformer"/>
+	<int-websocket:inbound-channel-adapter id="webSocketInboundChannelAdapter" container="webSocketContainer" auto-startup="false" channel="byteChannel" message-converters="byteBufferConverter" payload-type="java.nio.ByteBuffer"/>
+	<int:channel id="byteChannel"/>
+
+
+	<int:header-enricher input-channel="output" output-channel="enriched">
+		<int:header name="EVENT_TYPE" expression="payload.eventType"></int:header>
+	</int:header-enricher>
+	<int:channel id="enriched"/>
+	<int:channel id="httpStartStop">
+		<int:dispatcher task-executor="executor"></int:dispatcher>
+	</int:channel>
+	<int:channel id="counter">
+		<int:dispatcher task-executor="executor"></int:dispatcher>
+	</int:channel>
+
+	<int:channel id="metrics" >
+		<int:dispatcher task-executor="executor"></int:dispatcher>
+
+	</int:channel>
+
+	
+	
+	<int:header-value-router input-channel="enriched" header-name="EVENT_TYPE">
+		<int:mapping value="HttpStartStop" channel="httpStartStop"/>
+		<int:mapping value="CounterMetric" channel="metrics"/>
+		<int:mapping value="CounterEvent" channel="counter"/>
+	</int:header-value-router>
+	<int:service-activator input-channel="httpStartStop"
+		method="onMessage" ref="httpMetricService">
+	</int:service-activator>
+	<int:service-activator input-channel="counter" method="onMessage"
+		ref="counterMetricService">
+	</int:service-activator>
+	<int:service-activator input-channel="metrics" method="onMessage"
+		ref="genericMetricService">
+	</int:service-activator>
+	
+</beans>

@@ -26,7 +26,10 @@ dependencies {
     compile("org.springframework.boot:spring-boot-starter-web")
     compile("org.springframework.boot:spring-boot-starter-actuator")
     compile("commons-codec:commons-codec:1.10")
+    compile("io.dropwizard.metrics:metrics-core:3.1.0")
+    compile("org.cloudfoundry:cloudfoundry-client-lib:1.1.2")
     compile("org.springframework.xd.cf.firehose:firehose:1.0.0.BUILD-SNAPSHOT")
+    testCompile("org.springframework.boot:spring-boot-starter-test")
     testCompile("junit:junit:4.12")
 
 }
