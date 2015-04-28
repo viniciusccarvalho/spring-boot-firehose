@@ -1,15 +1,9 @@
-package org.springframework.boot.firehose;
+package org.springframework.boot.firehose.integration.test;
 
 
-import com.codahale.metrics.ConsoleReporter;
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Reporter;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.firehose.annotations.EnableFirehoseMetrics;
-import org.springframework.context.annotation.Bean;
-
-import java.util.concurrent.TimeUnit;
 
 
 /**
