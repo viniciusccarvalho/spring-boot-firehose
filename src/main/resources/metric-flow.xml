@@ -7,14 +7,19 @@
 	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration-4.1.xsd http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd http://www.springframework.org/schema/integration/websocket http://www.springframework.org/schema/integration/websocket/spring-integration-websocket.xsd">
 
+
+
+
+	<bean id="byteBufferConverter" class="org.springframework.boot.firehose.integration.ByteBufferMessageConverter"/>
+	<bean id="envelopeTransformer" class="org.springframework.boot.firehose.integration.EnvelopeTransformer"/>
 	<task:executor id="executor" pool-size="10" queue-capacity="100"/>
 
 
-	<bean id="byteBufferConverter" class="org.springframework.xd.firehose.ByteBufferMessageConverter"/>
-	<bean id="envelopeTransformer" class="org.springframework.xd.firehose.EnvelopeTransformer"/>
 	<int-websocket:inbound-channel-adapter id="webSocketInboundChannelAdapter" container="webSocketContainer" auto-startup="false" channel="byteChannel" message-converters="byteBufferConverter" payload-type="java.nio.ByteBuffer"/>
 	<int:channel id="byteChannel"/>
+	<int:channel id="output"/>
 
+	<int:transformer input-channel="byteChannel" output-channel="output" ref="envelopeTransformer"/>
 
 	<int:header-enricher input-channel="output" output-channel="enriched">
 		<int:header name="EVENT_TYPE" expression="payload.eventType"></int:header>
@@ -34,10 +39,11 @@
 
 	
 	
-	<int:header-value-router input-channel="enriched" header-name="EVENT_TYPE">
+	<int:header-value-router input-channel="enriched" header-name="EVENT_TYPE" resolution-required="false" default-output-channel="nullChannel">
 		<int:mapping value="HttpStartStop" channel="httpStartStop"/>
-		<int:mapping value="CounterMetric" channel="metrics"/>
+		<int:mapping value="ValueMetric" channel="metrics"/>
 		<int:mapping value="CounterEvent" channel="counter"/>
+
 	</int:header-value-router>
 	<int:service-activator input-channel="httpStartStop"
 		method="onMessage" ref="httpMetricService">

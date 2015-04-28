@@ -22,7 +22,6 @@ public class CounterMetricService {
         CounterEvent event = message.getPayload().getCounterEvent();
         Counter counter = registry.counter(message.getPayload().getOrigin()+"."+event.getName());
         counter.inc(event.getDelta());
-        System.out.println(message.getPayload());
 
     }
 
